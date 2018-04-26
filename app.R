@@ -1,10 +1,14 @@
 library(shiny)
+if (!require(devtools))
+  install.packages("devtools")
+devtools::install_github("ITHIM/ITHIM", ref = "ithimus")
+library("ITHIM")
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
 
   # App title ----
-  titlePanel("Hello Shiny!"),
+  titlePanel("HOT-USA"),
 
   # Sidebar layout with input and output definitions ----
   sidebarLayout(

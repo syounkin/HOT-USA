@@ -106,7 +106,9 @@ function(input, output, session) {
       # Radius is treated specially in the "superzip" case.
 #      radius <- ifelse(zipdata$centile >= (100 - input$threshold), 30000, 3000)
 #    } else {
-      radius <- countyData[["population"]] / max(countyData[["population"]]) * 5e5
+    #radius <- countyData[["population"]] / max(countyData[["population"]]) * 5e6
+    #radius <- ifelse(radius > 1e4, 1e4, radius)
+    radius <- 1e4
 #    }
 
     leafletProxy("map", data = countyData) %>%
@@ -133,7 +135,7 @@ function(input, output, session) {
     leafletProxy("map") %>% addPopups(lng, lat, content, layerId = county)
   }
 
-  # When map is clicked, show a popup with city info
+  # When map is clicked, show a popup with county info
   observe({
     leafletProxy("map") %>% clearPopups()
     event <- input$map_shape_click
@@ -148,59 +150,59 @@ function(input, output, session) {
 
   ## Data Explorer ###########################################
 
-  observe({
-    cities <- if (is.null(input$states)) character(0) else {
-      filter(cleantable, State %in% input$states) %>%
-        `$`('City') %>%
-        unique() %>%
-        sort()
-    }
-    stillSelected <- isolate(input$cities[input$cities %in% cities])
-    updateSelectInput(session, "cities", choices = cities,
-      selected = stillSelected)
-  })
+##   observe({
+##     cities <- if (is.null(input$states)) character(0) else {
+##       filter(cleantable, State %in% input$states) %>%
+##         `$`('City') %>%
+##         unique() %>%
+##         sort()
+##     }
+##     stillSelected <- isolate(input$cities[input$cities %in% cities])
+##     updateSelectInput(session, "cities", choices = cities,
+##       selected = stillSelected)
+##   })
 
-  observe({
-    zipcodes <- if (is.null(input$states)) character(0) else {
-      cleantable %>%
-        filter(State %in% input$states,
-          is.null(input$cities) | City %in% input$cities) %>%
-        `$`('Zipcode') %>%
-        unique() %>%
-        sort()
-    }
-    stillSelected <- isolate(input$zipcodes[input$zipcodes %in% zipcodes])
-    updateSelectInput(session, "zipcodes", choices = zipcodes,
-      selected = stillSelected)
-  })
+##   observe({
+##     zipcodes <- if (is.null(input$states)) character(0) else {
+##       cleantable %>%
+##         filter(State %in% input$states,
+##           is.null(input$cities) | City %in% input$cities) %>%
+##         `$`('Zipcode') %>%
+##         unique() %>%
+##         sort()
+##     }
+##     stillSelected <- isolate(input$zipcodes[input$zipcodes %in% zipcodes])
+##     updateSelectInput(session, "zipcodes", choices = zipcodes,
+##       selected = stillSelected)
+##   })
 
-  observe({
-    if (is.null(input$goto))
-      return()
-    isolate({
-      map <- leafletProxy("map")
-      map %>% clearPopups()
-      dist <- 0.5
-      zip <- input$goto$zip
-      lat <- input$goto$lat
-      lng <- input$goto$lng
-      showZipcodePopup(zip, lat, lng)
-      map %>% fitBounds(lng - dist, lat - dist, lng + dist, lat + dist)
-    })
-  })
+##   observe({
+##     if (is.null(input$goto))
+##       return()
+##     isolate({
+##       map <- leafletProxy("map")
+##       map %>% clearPopups()
+##       dist <- 0.5
+##       zip <- input$goto$zip
+##       lat <- input$goto$lat
+##       lng <- input$goto$lng
+##       showZipcodePopup(zip, lat, lng)
+##       map %>% fitBounds(lng - dist, lat - dist, lng + dist, lat + dist)
+##     })
+##   })
 
-  output$ziptable <- DT::renderDataTable({
-    df <- cleantable %>%
-      filter(
-        Score >= input$minScore,
-        Score <= input$maxScore,
-        is.null(input$states) | State %in% input$states,
-        is.null(input$cities) | City %in% input$cities,
-        is.null(input$zipcodes) | Zipcode %in% input$zipcodes
-      ) %>%
-      mutate(Action = paste('<a class="go-map" href="" data-lat="', Lat, '" data-long="', Long, '" data-zip="', Zipcode, '"><i class="fa fa-crosshairs"></i></a>', sep=""))
-    action <- DT::dataTableAjax(session, df)
+##   output$ziptable <- DT::renderDataTable({
+##     df <- cleantable %>%
+##       filter(
+##         Score >= input$minScore,
+##         Score <= input$maxScore,
+##         is.null(input$states) | State %in% input$states,
+##         is.null(input$cities) | City %in% input$cities,
+##         is.null(input$zipcodes) | Zipcode %in% input$zipcodes
+##       ) %>%
+##       mutate(Action = paste('<a class="go-map" href="" data-lat="', Lat, '" data-long="', Long, '" data-zip="', Zipcode, '"><i class="fa fa-crosshairs"></i></a>', sep=""))
+##     action <- DT::dataTableAjax(session, df)
 
-    DT::datatable(df, options = list(ajax = list(url = action)), escape = FALSE)
-  })
+##     DT::datatable(df, options = list(ajax = list(url = action)), escape = FALSE)
+##   })
 }

@@ -5,11 +5,18 @@ library(lattice)
 library(dplyr)
 
 # Leaflet bindings are a bit slow; for now we'll just sample to compensate
-set.seed(100)
-zipdata <- allzips[sample.int(nrow(allzips), 10000),]
+#set.seed(100)
+#zipdata <- allzips[sample.int(nrow(allzips), 10000),]
 # By ordering by centile, we ensure that the (comparatively rare) SuperZIPs
 # will be drawn last and thus be easier to see
-zipdata <- zipdata[order(zipdata$centile),]
+#zipdata <- zipdata[order(zipdata$centile),]
+
+zipdata <- allzips
+
+countyData <- allzips %>% group_by(county) %>% summarise(latitude = mean(latitude), longitude = mean(longitude), population = sum(adultpop), nzip = n())
+
+NHTS.list <- readRDS(file = "/Users/syounkin/NHTS/R/data/NHTS.list.rds")
+
 
 function(input, output, session) {
 
@@ -27,14 +34,14 @@ function(input, output, session) {
 
   # A reactive expression that returns the set of zips that are
   # in bounds right now
-  zipsInBounds <- reactive({
+  countiesInBounds <- reactive({
     if (is.null(input$map_bounds))
-      return(zipdata[FALSE,])
+      return(countyData[FALSE,])
     bounds <- input$map_bounds
     latRng <- range(bounds$north, bounds$south)
     lngRng <- range(bounds$east, bounds$west)
 
-    subset(zipdata,
+    subset(countyData,
       latitude >= latRng[1] & latitude <= latRng[2] &
         longitude >= lngRng[1] & longitude <= lngRng[2])
   })
@@ -44,24 +51,24 @@ function(input, output, session) {
 
   output$histCentile <- renderPlot({
     # If no zipcodes are in view, don't plot
-    if (nrow(zipsInBounds()) == 0)
+    if (nrow(countiesInBounds()) == 0)
       return(NULL)
 
-    hist(zipsInBounds()$adultpop,
+    hist(countiesInBounds()$population,
       #breaks = centileBreaks,
       main = "Adult Population",
       xlab = "Percentile",
-      xlim = range(allzips$adultpop),
+      xlim = range(countyData$population),
       col = '#00DD00',
       border = 'white')
   })
 
   output$scatterCollegeIncome <- renderPlot({
     # If no zipcodes are in view, don't plot
-    if (nrow(zipsInBounds()) == 0)
+    if (nrow(countiesInBounds()) == 0)
       return(NULL)
 
-    print(xyplot(income ~ college, data = zipsInBounds(), xlim = range(allzips$college), ylim = range(allzips$income)))
+    print(xyplot(population ~ nzip, data = countiesInBounds(), xlim = range(countyData$nzip), ylim = range(countyData$population)))
   })
 
   # This observer is responsible for maintaining the circles and legend,
@@ -70,44 +77,45 @@ function(input, output, session) {
     colorBy <- input$color
     sizeBy <- input$size
 
-    if (colorBy == "superzip") {
+    #if (colorBy == "superzip") {
       # Color and palette are treated specially in the "superzip" case, because
       # the values are categorical instead of continuous.
-      colorData <- ifelse(zipdata$centile >= (100 - input$threshold), "yes", "no")
-      pal <- colorFactor("viridis", colorData)
-    } else {
-      colorData <- zipdata[[colorBy]]
+     # colorData <- ifelse(zipdata$centile >= (100 - input$threshold), "yes", "no")
+      #pal <- colorFactor("viridis", colorData)
+    #} else {
+      colorData <- countyData[[colorBy]]
       pal <- colorBin("viridis", colorData, 7, pretty = FALSE)
-    }
+    #}
 
 #    if (sizeBy == "superzip") {
       # Radius is treated specially in the "superzip" case.
 #      radius <- ifelse(zipdata$centile >= (100 - input$threshold), 30000, 3000)
 #    } else {
-      radius <- zipdata[[sizeBy]] / max(zipdata[[sizeBy]]) * 30000
+      radius <- countyData[[sizeBy]] / max(countyData[[sizeBy]]) * 3e5
 #    }
 
-    leafletProxy("map", data = zipdata) %>%
+    leafletProxy("map", data = countyData) %>%
       clearShapes() %>%
-      addCircles(~longitude, ~latitude, radius=radius, layerId=~zipcode,
+      addCircles(~longitude, ~latitude, radius=radius, layerId=~county,
         stroke=FALSE, fillOpacity=0.4, fillColor=pal(colorData)) %>%
       addLegend("bottomleft", pal=pal, values=colorData, title=colorBy,
         layerId="colorLegend")
   })
 
   # Show a popup at the given location
-  showZipcodePopup <- function(zipcode, lat, lng) {
-    selectedZip <- allzips[allzips$zipcode == zipcode,]
+  showZipcodePopup <- function(county, lat, lng) {
+    selectedCounty <- subset(countyData, county == county) #allzi[allzips$zipcode == zipcode,]
     content <- as.character(tagList(
-      tags$h4("Score:", as.integer(selectedZip$centile)),
-      tags$strong(HTML(sprintf("%s, %s %s",
-        selectedZip$city.x, selectedZip$state.x, selectedZip$zipcode
-      ))), tags$br(),
-      sprintf("Median household income: %s", dollar(selectedZip$income * 1000)), tags$br(),
-      sprintf("Percent of adults with BA: %s%%", as.integer(selectedZip$college)), tags$br(),
-      sprintf("Adult population: %s", selectedZip$adultpop)
-    ))
-    leafletProxy("map") %>% addPopups(lng, lat, content, layerId = zipcode)
+      tags$h4("County:", county))#,
+      #tags$h4(HTML(sprintf("Population: %s",
+      #  selectedCounty$population #, selectedZip$state.x, selectedZip$zipcode
+      #))), tags$br()
+#      sprintf("Median household income: %s", dollar(selectedZip$income * 1000)), tags$br(),
+#      sprintf("Percent of adults with BA: %s%%", as.integer(selectedZip$college)), tags$br(),
+#      sprintf("Adult population: %s", selectedZip$adultpop)
+                                        #))
+      )
+    leafletProxy("map") %>% addPopups(lng, lat, content, layerId = county)
   }
 
   # When map is clicked, show a popup with city info

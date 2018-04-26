@@ -4,9 +4,9 @@ library(leaflet)
 vars <- c(
 #  "Is SuperZIP?" = "superzip",
 #  "Centile score" = "centile",
-  "College education" = "college",
-  "Median income" = "income",
-  "Population" = "adultpop"
+#  "College education" = "college",
+  "Number of zip codes" = "nzip",
+  "Population" = "population"
 )
 
 
@@ -31,8 +31,8 @@ navbarPage("HOT USA", id="nav",
 
         h2("Summary of Visible Zip Codes"),
 
-        selectInput("color", "Color", vars),
-        selectInput("size", "Size", vars, selected = "adultpop"),
+        selectInput("color", "Color", vars, selected = "nzip"),
+        selectInput("size", "Size", vars, selected = "population"),
         ## conditionalPanel("input.color == 'superzip' || input.size == 'superzip'",
         ##   # Only prompt for threshold when coloring or sizing by superzip
         ##   numericInput("threshold", "SuperZIP threshold (top n percentile)", 5)

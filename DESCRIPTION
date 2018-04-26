@@ -1,7 +1,7 @@
-Title: Hello Shiny!
-Author: RStudio, Inc.
-AuthorUrl: http://www.rstudio.com/
+Title: HOT USA Map
 License: MIT
-DisplayMode: Showcase
-Tags: getting-started
+DisplayMode: Normal
+Author: Samuel Younkin <syounkin@wisc.edu>
+AuthorUrl: http://www.ghi.wisc.edu
 Type: Shiny
+Tags: leaflet selectize datatables absolutepanel

@@ -106,9 +106,9 @@ function(input, output, session) {
       # Radius is treated specially in the "superzip" case.
 #      radius <- ifelse(zipdata$centile >= (100 - input$threshold), 30000, 3000)
 #    } else {
-    #radius <- countyData[["population"]] / max(countyData[["population"]]) * 5e6
-    #radius <- ifelse(radius > 1e4, 1e4, radius)
-    radius <- 1e4
+    #radius <- countyData[["population"]] / max(countyData[["population"]]) * 1e6
+    #radius <- ifelse(radius > 2e6, 2e6, radius)
+    radius <- 1.5e4
 #    }
 
     leafletProxy("map", data = countyData) %>%

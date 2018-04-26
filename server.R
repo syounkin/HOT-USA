@@ -13,7 +13,9 @@ library(dplyr)
 
 zipdata <- allzips
 
-countyData <- allzips %>% group_by(county) %>% summarise(latitude = mean(latitude), longitude = mean(longitude), population = sum(adultpop), nzip = n())
+countyData <- allzips %>% group_by(state.y, county) %>% summarise(latitude = mean(latitude), longitude = mean(longitude), population = sum(adultpop), nzip = n()) %>% mutate(countyAndState = paste0(county, ", ", state.y))
+
+countyData <- cbind(countyData, walkTime = rnorm(n = nrow(countyData), mean = 10), cycleTime = rnorm(n = nrow(countyData), mean = 10))
 
 NHTS.list <- readRDS(file = "/Users/syounkin/NHTS/R/data/NHTS.list.rds")
 
@@ -54,12 +56,25 @@ function(input, output, session) {
     if (nrow(countiesInBounds()) == 0)
       return(NULL)
 
-    hist(countiesInBounds()$population,
+    hist(countiesInBounds()$walkTime,
       #breaks = centileBreaks,
-      main = "Adult Population",
-      xlab = "Percentile",
-      xlim = range(countyData$population),
+      main = "Average Walk Time",
+      xlab = "Walk Time",
+      xlim = range(countyData$walkTime),
       col = '#00DD00',
+      border = 'white')
+  })
+  output$histCentile2 <- renderPlot({
+    # If no zipcodes are in view, don't plot
+    if (nrow(countiesInBounds()) == 0)
+      return(NULL)
+
+    hist(countiesInBounds()$cycleTime,
+      #breaks = centileBreaks,
+      main = "Average Cycle Time",
+      xlab = "Cycle Time",
+      xlim = range(countyData$cycleTime),
+      col = '#00FF00',
       border = 'white')
   })
 
@@ -91,12 +106,12 @@ function(input, output, session) {
       # Radius is treated specially in the "superzip" case.
 #      radius <- ifelse(zipdata$centile >= (100 - input$threshold), 30000, 3000)
 #    } else {
-      radius <- countyData[[sizeBy]] / max(countyData[[sizeBy]]) * 3e5
+      radius <- countyData[["population"]] / max(countyData[["population"]]) * 5e5
 #    }
 
     leafletProxy("map", data = countyData) %>%
       clearShapes() %>%
-      addCircles(~longitude, ~latitude, radius=radius, layerId=~county,
+      addCircles(~longitude, ~latitude, radius=radius, layerId=~countyAndState,
         stroke=FALSE, fillOpacity=0.4, fillColor=pal(colorData)) %>%
       addLegend("bottomleft", pal=pal, values=colorData, title=colorBy,
         layerId="colorLegend")

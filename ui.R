@@ -5,8 +5,10 @@ vars <- c(
 #  "Is SuperZIP?" = "superzip",
 #  "Centile score" = "centile",
 #  "College education" = "college",
-  "Number of zip codes" = "nzip",
-  "Population" = "population"
+#  "Number of zip codes" = "nzip",
+    "Population" = "population",
+    "Walk Time" = "walkTime",
+      "Cycle Time" = "cycleTime"
 )
 
 
@@ -29,17 +31,19 @@ navbarPage("HOT USA", id="nav",
         draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
         width = 330, height = "auto",
 
-        h2("Summary of Visible Zip Codes"),
+        h2("Summary of Counties"),
 
-        selectInput("color", "Color", vars, selected = "nzip"),
-        selectInput("size", "Size", vars, selected = "population"),
+        #selectInput("size", "Size", vars, selected = "population"),
+        selectInput("color", "Color", vars, selected = "walkTime"),
+
         ## conditionalPanel("input.color == 'superzip' || input.size == 'superzip'",
         ##   # Only prompt for threshold when coloring or sizing by superzip
         ##   numericInput("threshold", "SuperZIP threshold (top n percentile)", 5)
         ## ),
 
         plotOutput("histCentile", height = 200),
-        plotOutput("scatterCollegeIncome", height = 250)
+        plotOutput("histCentile2", height = 200)
+#        plotOutput("scatterCollegeIncome", height = 250)
       )#,
 
       ## tags$div(id="cite",

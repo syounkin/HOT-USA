@@ -70,7 +70,7 @@ ui <- fluidPage(
       tags$strong("Travel Activity Map"),
       tags$br(),
       tags$i("Click on the map for summary statistics."),
-      leafletOutput("map")
+      leafletOutput("map", width = wd <- 1500, height = wd/phi)
 ##      tags$br(),
       ## tags$p("Foo",
       ##        tags$a(href="https://doi.org/10.3141/2651-08","Transportation Research Record 2651-08"),

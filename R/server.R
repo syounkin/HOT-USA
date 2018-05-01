@@ -10,7 +10,7 @@ library(foreign)
 #                  "OGRGeoJSON")
 #tracts <- readOGR(dsn="web", layer="tract_accessibility")
 
-tracts <- readOGR(dsn = "./data/shape", layer = "cb_2017_us_cbsa_500k")
+tracts <- readOGR(dsn = "./../data/shape", layer = "cb_2017_us_cbsa_500k")
 
 tracts@data <- within(tracts@data, pseudoData <- rnorm(nrow(tracts@data)))
 
@@ -22,10 +22,10 @@ shinyServer(function(input, output) {
       addProviderTiles("CartoDB.Positron") %>%
       setView(lng = -89.400427, lat = 43.072536, zoom = 4) %>%
       addPolygons(
-        stroke=FALSE,
-        fillOpacity=1,
-        smoothFactor=0,
-        color= ~colorQuantile("Blues", pseudoData, n = 9)(pseudoData),
+        stroke=TRUE, color = "black", weight = 1,
+        fillOpacity=0.75,
+        smoothFactor=1,
+        fillColor= ~colorQuantile("Blues", pseudoData, n = 9)(pseudoData),
         layerId=tracts$GEOID
       )
   })

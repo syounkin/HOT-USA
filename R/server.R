@@ -21,7 +21,12 @@ hh.csv <- within(hh.csv,{
 
 shinyServer(function(input, output) {
 
-GEO <- "state"
+
+
+  # Generate map
+    output$map <- renderLeaflet({
+            GEO <- input$GEO
+#GEO <- "state"
 
 if(GEO == "state"){
     layer <- "cb_2017_us_state_500k"
@@ -38,8 +43,6 @@ if(GEO == "state"){
 }
 
 
-  # Generate map
-  output$map <- renderLeaflet({
     leaflet(ogr) %>%
       addProviderTiles("CartoDB.Positron") %>%
       setView(lng = -96.6, lat = 39.5, zoom = 5) %>%

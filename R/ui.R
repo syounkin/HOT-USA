@@ -13,28 +13,32 @@ library(foreign)
 ## )
 
 
-ui <- fluidPage(
+fluidPage(
 
-    selectInput("GEO", "Geographic Level:",
-                c("State" = "state",
-                  "MSA" = "MSA")),
-    tableOutput("data")
-,
 
 
 
   # Application title
-  tags$h3("HOT USA"),
-  tags$p("Initiative for Health-Oriented Transportation at UW-Madison"),
+#  tags$h3("HOT USA"),
+                                        #  tags$p("Initiative for Health-Oriented Transportation at UW-Madison"),
+
+    sidebarLayout(
+        sidebarPanel(
+            selectInput("GEO", "Geographic Level:",
+                c("State" = "state",
+                  "MSA" = "MSA"))),
+    #tableOutput("data")
+
+
 
       mainPanel(
-      tags$strong("Travel Activity Map"),
-      tags$br(),
-      tags$i("Click on the map for summary statistics."),
+#      tags$strong("Travel Activity Map"),
+#      tags$br(),
+#      tags$i("Click on the map for summary statistics."),
       leafletOutput("map", width = wd <- 1500, height = wd/phi)
       )
   )
-
+)
 
 
  ##  # Sidebar with input

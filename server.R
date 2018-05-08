@@ -56,7 +56,11 @@ shinyServer(function(input, output) {
                 smoothFactor=1,
                 fillColor= ~pal(dataVec),#~colorQuantile(pal, dataVec, n = 9)(dataVec),
                 layerId=ogr$GEOID
-            )
+            ) %>%
+            addLegend("bottomright", pal = pal, values = ~dataVec, title = "")
+   # title = "Est. GDP (2010)",
+   # labFormat = labelFormat(prefix = "$"),
+   # opacity = 1)
     })
 
     showPopup <- function(geoID, lat, lng) {

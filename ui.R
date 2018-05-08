@@ -24,9 +24,9 @@ fluidPage(
 
     sidebarLayout(
         sidebarPanel(
-            selectInput("GEO", "Geographic Level:",
-                c("State" = "state",
-                  "MSA" = "MSA"))),
+            selectInput("colorBy", "Select:",
+                c("Pedestrians" = "peds",
+                  "Cyclists" = "cyclists")), width = 1),
     #tableOutput("data")
 
 

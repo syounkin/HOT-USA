@@ -21,30 +21,31 @@ hh.csv <- within(hh.csv,{
 
 shinyServer(function(input, output) {
 
+    layer <- "cb_2017_us_state_500k"
+    hh.df <- hh.csv %>% group_by(HHSTFIPS) %>% summarise(n = n(), BIKE = 100*sum(BIKE %in% 1:3, na.rm = TRUE)/sum(!is.na(BIKE)), WALK = 100*sum(WALK %in% 1:3, na.rm = TRUE)/sum(!is.na(WALK)))
+    ogr <- readOGR(dsn = "./data/shape", layer = layer)
+    ogr@data <- within(ogr@data,{
+        STATEFP <- as.numeric(as.character(STATEFP))
+        GEOID <- as.numeric(as.character(GEOID))
+    })
+    ogr@data <- left_join(ogr@data,hh.df,by=c("STATEFP" = "HHSTFIPS"))
+
     output$map <- renderLeaflet({
 
-        GEO <- input$GEO
+        if(input$colorBy == "cyclists"){
 
-        if(GEO == "state"){
-            layer <- "cb_2017_us_state_500k"
-            hh.df <- hh.csv %>% group_by(HHSTFIPS) %>% summarise(n = n(), BIKE = sum(BIKE == 5, na.rm = TRUE))
-            ogr <- readOGR(dsn = "./data/shape", layer = layer)
-            ogr@data <- within(ogr@data,{
-                STATEFP <- as.numeric(as.character(STATEFP))
-                GEOID <- as.numeric(as.character(GEOID))
-                })
-            ogr@data <- left_join(ogr@data,hh.df,by=c("STATEFP" = "HHSTFIPS"))
-        }else if(GEO == "MSA"){
-            layer <- "cb_2017_us_cbsa_500k"
-            hh.df <- hh.csv %>% group_by(HH_CBSA) %>% summarise(n = n(), BIKE = sum(BIKE == 5, na.rm = TRUE))
-            ogr <- readOGR(dsn = "./data/shape", layer = layer)
-            ogr@data <- within(ogr@data,{
-                CBSAFP <- as.numeric(as.character(CBSAFP))
-                GEOID <- as.numeric(as.character(GEOID))
-                })
-            ogr@data <- left_join(ogr@data,hh.df,by=c("CBSAFP" = "HH_CBSA"))
+            dataVec <- ogr@data$BIKE
+
+        }else if(input$colorBy == "peds"){
+
+            dataVec <- ogr@data$WALK
+        }else{
+            dataVec <- NULL
         }
 
+        pal <- colorNumeric(
+            palette = "YlOrRd",
+            domain = dataVec)
 
         leaflet(ogr) %>%
             addProviderTiles("CartoDB.Positron") %>%
@@ -53,7 +54,7 @@ shinyServer(function(input, output) {
                 stroke=TRUE, color = "black", weight = 1,
                 fillOpacity=0.75,
                 smoothFactor=1,
-                fillColor= ~colorQuantile("Blues", n, n = 9)(BIKE),
+                fillColor= ~pal(dataVec),#~colorQuantile(pal, dataVec, n = 9)(dataVec),
                 layerId=ogr$GEOID
             )
     })
@@ -70,10 +71,12 @@ shinyServer(function(input, output) {
         #popDens <- as.character(prettyNum(round(selectedTract$popDens,0),big.mark=","))
 
         content <- as.character(tagList(
-            paste0("geoID = ", geoID), tags$br(),
-            paste0("GEOID = ", selectedTract$GEOID), tags$br(),
+#            paste0("geoID = ", geoID), tags$br(),
+#            paste0("GEOID = ", selectedTract$GEOID), tags$br(),
             paste0("Name: ",selectedTract$NAME), tags$br(),
-            paste0("Number of households sampled ", selectedTract$n)
+            paste0("Number of households sampled: ", prettyNum(selectedTract$n,big.mark = ",")), tags$br(),
+            paste0("Pedestrians: ", round(selectedTract$WALK,1), "%"), tags$br(),
+            paste0("Cyclists: ", round(selectedTract$BIKE,1), "%")
         ))
         leafletProxy("map") %>% addPopups(lng, lat, content) # remove quotes for actual layerId
     }
